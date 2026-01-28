@@ -3,13 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>🦖 恐龍蛋 POS 雲端同步版</title>
+<title>🦖 恐龍蛋 POS 旗艦版</title>
 <style>
     :root { 
         --orange: #ffedd5; --grey: #f1f5f9; 
         --dark-orange: #f97316; --green: #22c55e; --red: #ef4444; 
         --slate: #64748b; --purple: #a855f7; --blue: #3b82f6; 
-        --yellow: #fef08a; --table-border: #eee;
+        --yellow: #fef08a;
+        --pink: #cd2701; /* 折扣鍵專用粉紅 */
+        --cash-100: #fee2e2; /* 100 紅色系 */
+        --cash-500: #fef3c7; /* 500 咖啡/深色系 */
+        --cash-1000: #dbeafe; /* 1000 藍色系 */
     }
     body { margin: 0; font-family: 'PingFang TC', sans-serif; background: #fffaf5; color: #1e293b; padding-bottom: 80px; }
     header { background: #86efac; text-align: center; padding: 15px; font-size: 24px; font-weight: bold; color: #166534; border-bottom: 3px solid #16a34a; }
@@ -29,38 +33,44 @@
 
     .cart-box { background: #fff; margin: 10px; padding: 15px; border-radius: 20px; border: 2px solid #86efac; }
     .total-text { font-size: 34px; font-weight: bold; text-align: right; color: #166534; }
+
     .pay-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 12px; }
     .pay-grid button { padding: 18px 5px; border: none; border-radius: 16px; font-weight: bold; color: #fff; font-size: 16px; }
     .btn-cash { background: #fbbf24; color: #422006 !important; }
     .btn-line { background: #06c755; }
     .btn-allpay { background: #3b82f6; }
     .btn-uber { background: #475569; }
-    .btn-panda { background: #e11d48; }
+    .btn-panda { background: #ed5180; }
     .btn-pre { background: var(--purple); }
-    .btn-disc { background: var(--slate); }
+    .btn-disc { background: #cd2701 !important; } /* 修改折扣鍵為明顯粉紅/桃紅 */
     .btn-report { background: var(--slate); grid-column: span 2; }
     .btn-undo { background: #fef2f2; color: #b91c1c !important; border: 2px dashed #fecaca !important; grid-column: span 3; padding: 15px !important; margin-top: 5px; font-size: 18px !important; }
 
+    /* 現金快捷鍵顏色 */
+    .btn-q100 { background: #2563eb !important; color: #fff !important; border: 1px solid #ef4444 !important; }
+    .btn-q500 { background: #2563eb !important; color: #fff !important; }
+    .btn-q1000 { background: #2563eb !important; color: #fff !important; }
+
     .kds-section { background: #e2e8f0; margin: 12px; padding: 15px; border-radius: 20px; }
-    .kds-card { background: #fff; padding: 20px; border-radius: 20px; margin-bottom: 15px; border-left: 10px solid transparent; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    .kds-card { background: #fff; padding: 20px; border-radius: 20px; margin-bottom: 15px; border-left: 12px solid transparent; box-shadow: 0 4px 6px rgba(0,0,0,0.1); position: relative; }
     .card-store { border-left-color: var(--green); }
     .card-delivery { border-left-color: var(--blue); }
     .card-preorder { border-left-color: var(--purple); }
-    .urgent-15 { background: var(--yellow) !important; border-left-color: #eab308; }
-    .urgent-10 { background: #fee2e2 !important; border-left-color: var(--red); animation: shake 0.5s infinite; }
+    .urgent-15 { background: var(--yellow) !important; border-left-color: #eab308 !important; }
+    .urgent-10 { background: #fee2e2 !important; border-left-color: var(--red) !important; animation: shake 0.5s infinite; }
     @keyframes shake { 0%, 100% { transform: translate(0,0); } 25% { transform: translate(2px,0); } 75% { transform: translate(-2px,0); } }
 
-    .kds-tag { font-weight: bold; font-size: 18px; display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding-bottom: 5px; }
-    .kds-content { font-size: 32px; font-weight: 900; color: #000; margin: 15px 0; line-height: 1.3; }
-    .btn-done-big { width: 100%; padding: 22px; background: #22c55e; color: #fff; border: none; border-radius: 12px; font-size: 26px; font-weight: bold; }
+    .kds-tag { font-weight: bold; font-size: 18px; display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding-bottom: 8px; margin-bottom: 10px; }
+    .pay-tag { font-size: 14px; background: #f1f5f9; padding: 2px 8px; border-radius: 6px; color: var(--slate); }
+    .kds-content { font-size: 34px; font-weight: 900; color: #000; margin: 15px 0; line-height: 1.2; }
+    .btn-done-big { width: 100%; padding: 25px; background: #22c55e; color: #fff; border: none; border-radius: 15px; font-size: 28px; font-weight: bold; box-shadow: 0 4px 0 #16a34a; }
 
     .report-card { background: #fff; border-radius: 15px; padding: 15px; margin-bottom: 12px; border: 1px solid #e2e8f0; }
     .report-title { font-weight: bold; color: #5d2b1d; border-left: 4px solid var(--green); padding-left: 8px; margin: 20px 0 10px 0; }
-    .report-item-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f8fafc; font-size: 16px; }
-    .report-item-row:last-child { border-bottom: none; }
-    .journal-top { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed #cbd5e1; padding-bottom: 8px; margin-bottom: 8px; }
-    .btn-void { background: var(--red); color: #fff; border: none; padding: 6px 12px; border-radius: 8px; font-size: 13px; font-weight: bold; }
-    .tag-pay { background: #dcfce7; padding: 2px 10px; border-radius: 6px; font-size: 14px; color: #166534; font-weight: bold; }
+    .report-item-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f8fafc; font-size: 16px; }
+    .tab-container { display: flex; gap: 5px; margin-bottom: 15px; position: sticky; top: 45px; background: white; z-index: 101; padding: 5px 0; }
+    .tab-btn { flex: 1; padding: 12px; border: none; background: #eee; border-radius: 10px; font-weight: bold; color: var(--slate); }
+    .tab-btn.active { background: var(--green); color: white; }
 
     .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; z-index: 1000; align-items: flex-end; justify-content: center; }
     .overlay.active { display: flex; }
@@ -68,6 +78,7 @@
     .num-display { font-size: 50px; text-align: center; color: var(--blue); font-weight: bold; padding: 15px; background: #f8fafc; border-radius: 15px; margin-bottom: 10px; }
     .num-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
     .num-grid button { padding: 20px; font-size: 24px; font-weight: bold; border-radius: 15px; border: 1px solid #e2e8f0; background: #fff; }
+    .flavor-btn { padding: 15px; font-size: 18px; font-weight: bold; border-radius: 12px; border: 2px solid var(--orange); background: #fff; }
 </style>
 </head>
 <body class="mode-store" id="mainBody">
@@ -95,124 +106,101 @@
     <button class="btn-panda" onclick="handlePrePayment('熊貓')">熊貓</button>
     <button class="btn-pre" onclick="preorderStart()">⏰ 預約</button>
     <button class="btn-disc" onclick="openDiscountModal()">✂️ 折扣</button>
-    <button class="btn-report" onclick="verifyAdmin()">📊 營運報表</button>
+    <button class="btn-report" onclick="verifyAdmin()">📊 報表與結帳</button>
     <button class="btn-undo" onclick="undoLastOrder()">🚨 作廢上一筆</button>
 </div>
 
 <div class="kds-section"><div id="kdsArea"></div></div>
 
-<div class="overlay" id="cashModal"><div class="modal"><div id="cashDisplay" class="num-display">0</div><div class="num-grid"><button onclick="quickCash(100)">+100</button><button onclick="quickCash(500)">+500</button><button onclick="quickCash(1000)">+1000</button><button onclick="pressNum('1')">1</button><button onclick="pressNum('2')">2</button><button onclick="pressNum('3')">3</button><button onclick="pressNum('4')">4</button><button onclick="pressNum('5')">5</button><button onclick="pressNum('6')">6</button><button onclick="pressNum('7')">7</button><button onclick="pressNum('8')">8</button><button onclick="pressNum('9')">9</button><button onclick="clearNum()">清除</button><button onclick="pressNum('0')">0</button><button style="background:var(--green); color:white;" onclick="submitCash()">結帳</button></div><button onclick="closeCash()" style="width:100%; margin-top:10px; padding:10px; border:none; background:#eee; border-radius:10px;">返回</button></div></div>
+<div class="overlay" id="cashModal">
+    <div class="modal">
+        <div id="cashDisplay" class="num-display">0</div>
+        <div class="num-grid">
+            <button class="btn-q100" onclick="quickCash(100)">100</button>
+            <button class="btn-q500" onclick="quickCash(500)">500</button>
+            <button class="btn-q1000" onclick="quickCash(1000)">1000</button>
+            <button onclick="pressNum('1')">1</button>
+            <button onclick="pressNum('2')">2</button>
+            <button onclick="pressNum('3')">3</button>
+            <button onclick="pressNum('4')">4</button>
+            <button onclick="pressNum('5')">5</button>
+            <button onclick="pressNum('6')">6</button>
+            <button onclick="pressNum('7')">7</button>
+            <button onclick="pressNum('8')">8</button>
+            <button onclick="pressNum('9')">9</button>
+            <button onclick="clearNum()">清除</button>
+            <button onclick="pressNum('0')">0</button>
+            <button style="background:var(--green); color:white;" onclick="submitCash()">結帳</button>
+        </div>
+        <button onclick="closeCash()" style="width:100%; margin-top:10px; padding:10px; border:none; background:#eee; border-radius:10px;">返回</button>
+    </div>
+</div>
+
+<div class="overlay" id="flavorModal" style="align-items:center;"><div class="modal" style="border-radius:25px; text-align:center;"><h2>選擇湯圓口味</h2><div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;"><button class="flavor-btn" onclick="selectFlavor('花生')">🥜 花生</button><button class="flavor-btn" onclick="selectFlavor('芝麻')">⚫ 芝麻</button><button class="flavor-btn" onclick="selectFlavor('花生3芝麻2')">🌗 3花2芝</button><button class="flavor-btn" onclick="selectFlavor('芝麻3花生2')">🌓 3芝2花</button></div><button onclick="closeFlavorModal()" style="width:100%; margin-top:15px; padding:10px; border:none; background:#eee; border-radius:10px;">取消</button></div></div>
+<div class="overlay" id="prePaySelectModal" style="align-items:center;"><div class="modal" style="border-radius:25px; text-align:center;"><h2>預約單出餐付款</h2><div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;"><button class="btn-cash" style="padding:15px; border-radius:12px; background:#fbbf24; color:white; border:none; font-weight:bold;" onclick="confirmPreOrderPay('現金')">💰 現金</button><button class="btn-line" style="padding:15px; border-radius:12px; background:#06c755; color:white; border:none; font-weight:bold;" onclick="confirmPreOrderPay('LINE Pay')">LINE Pay</button><button class="btn-allpay" style="padding:15px; border-radius:12px; background:#3b82f6; color:white; border:none; font-weight:bold;" onclick="confirmPreOrderPay('全支付')">全支付</button><button class="btn-uber" style="padding:15px; border-radius:12px; background:#475569; color:white; border:none; font-weight:bold;" onclick="confirmPreOrderPay('Uber')">Uber</button><button class="btn-panda" style="padding:15px; border-radius:12px; background:#e11d48; color:white; border:none; font-weight:bold;" onclick="confirmPreOrderPay('熊貓')">熊貓</button></div><button onclick="document.getElementById('prePaySelectModal').classList.remove('active')" style="width:100%; margin-top:15px; padding:10px; border:none; background:#eee; border-radius:10px;">取消</button></div></div>
 <div class="overlay" id="changeModal" style="align-items:center;"><div class="modal" style="border-radius:25px; text-align:center;"><h2>應找零</h2><div style="font-size:72px; color:var(--red); font-weight:bold; margin:20px 0;">$<span id="changeVal">0</span></div><button onclick="document.getElementById('changeModal').classList.remove('active')" style="width:100%; padding:20px; background:var(--green); color:#fff; border:none; border-radius:15px; font-weight:bold;">完成</button></div></div>
 <div class="overlay" id="adminModal" style="align-items:center;"><div class="modal" style="border-radius:30px; max-height:85vh; overflow-y:auto; width:95%;"><div id="reportContent"></div></div></div>
 <div class="overlay" id="discountModal"><div class="modal"><div id="discountDisplay" class="num-display">0</div><div class="num-grid"><button onclick="pressDisc('1')">1</button><button onclick="pressDisc('2')">2</button><button onclick="pressDisc('3')">3</button><button onclick="pressDisc('4')">4</button><button onclick="pressDisc('5')">5</button><button onclick="pressDisc('6')">6</button><button onclick="pressDisc('7')">7</button><button onclick="pressDisc('8')">8</button><button onclick="pressDisc('9')">9</button><button onclick="clearDisc()">清除</button><button onclick="pressDisc('0')">0</button><button style="background:var(--green); color:white;" onclick="submitDiscount()">套用</button></div><button onclick="closeDiscount()" style="width:100%; margin-top:10px; padding:10px; border:none; background:#eee; border-radius:10px;">取消</button></div></div>
-<div class="overlay" id="preorderPayModal" style="align-items:center;"><div class="modal" style="border-radius:30px; width:90%;"><h3 style="text-align:center;">預約單結帳</h3><div class="pay-grid" id="preorderPayGrid"></div><button onclick="document.getElementById('preorderPayModal').classList.remove('active')" style="width:100%; padding:15px; margin-top:10px; background:#eee; border:none; border-radius:12px;">取消</button></div></div>
 
 <script>
 const ADMIN_PIN = "771130";
-// 已填入您的最新 Google Script 網址
-const GAS_URL = "https://script.google.com/macros/s/AKfycbxlMKcjjg9BhFEXirStYo1dgXLfytcNS23sdFLGWAwIu5fg_uVrDr5tLdE_Xx8BOZTAxQ/exec";
+// 已更新為您提供的新 GAS 網址
+const GAS_URL = "https://script.google.com/macros/s/AKfycbwkXxrYEuLYJadyLIRn6OJUzNLnn54XMK4nW58aFybT2VnyAaw2pg2BFye1o2LLbqq8KQ/exec";
+
+let salesData = JSON.parse(localStorage.getItem('dino_sales')) || [];
+let kdsOrders = JSON.parse(localStorage.getItem('dino_kds')) || [];
+let orderCount = parseInt(localStorage.getItem('dino_count')) || 0;
+let currentReportTab = 'daily';
+let pendingPreOrderId = null;
 
 const products = [
     { name: "原味", store: 50, delivery: 65 }, { name: "OREO", store: 60, delivery: 75 },
     { name: "起司", store: 65, delivery: 80 }, { name: "卡士達", store: 65, delivery: 75 },
     { name: "黑糖麻糬", store: 65, delivery: 80 }, { name: "巧克力", store: 60, delivery: 80 },
-    { name: "爆漿巧克力", store: 65, delivery: 85 }, { name: "桂冠湯圓", store: 80, delivery: 95 },
+    { name: "爆漿巧克力", store: 65, delivery: 85 }, { name: "桂冠湯圓", store: 80, delivery: 95, hasFlavor: true },
     { name: "【恐龍樂園】", store: 0, delivery: 100, isCombo: true },
     { name: "【卡士達套餐】", store: 0, delivery: 115, isCombo: true },
     { name: "【Oreo套餐】", store: 0, delivery: 120, isCombo: true },
     { name: "【起司套餐】", store: 0, delivery: 125, isCombo: true }
 ];
 
-let cart = {}, salesData = [], kdsOrders = [], currentChan = 'store', cashTyped = "", discTyped = "", discountAmount = 0, orderCount = 0, tempPreorderData = null;
+let cart = {}, currentChan = 'store', cashTyped = "", discTyped = "", discountAmount = 0;
 
-// 同步資料至雲端
-function syncToGoogle(orderData) {
-    if (!GAS_URL) return;
-    fetch(GAS_URL, {
-        method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(orderData)
-    }).catch(e => console.log("同步失敗:", e));
+function persist() {
+    localStorage.setItem('dino_sales', JSON.stringify(salesData));
+    localStorage.setItem('dino_kds', JSON.stringify(kdsOrders));
+    localStorage.setItem('dino_count', orderCount);
 }
 
-function checkUrgency(preTime) {
-    if (!preTime) return "";
-    const [hh, mm] = preTime.split(':');
-    const target = new Date(); target.setHours(parseInt(hh), parseInt(mm), 0);
-    const diff = (target - new Date()) / 60000;
-    if (diff <= 10) return "urgent-10";
-    if (diff <= 15) return "urgent-15";
-    return "";
+function selectFlavor(flavor) {
+    const key = `桂冠湯圓(${flavor})`;
+    cart[key] = (cart[key] || 0) + 1;
+    document.getElementById('flavorModal').classList.remove('active');
+    updateCartUI();
 }
+function closeFlavorModal() { document.getElementById('flavorModal').classList.remove('active'); }
 
-function showReport() {
-    let total = 0, pay = {"現金":0,"LINE Pay":0,"全支付":0,"Uber":0,"熊貓":0};
-    let timeStats = {}, itemSales = {}, journalH = "";
-
-    salesData.forEach(s => {
-        if(!s.void) {
-            total += s.amount; pay[s.type] = (pay[s.type] || 0) + s.amount;
-            const hr = s.time.split(':')[0].padStart(2, '0');
-            const slot = `${hr}:00 - ${hr}:59`;
-            if(!timeStats[slot]) timeStats[slot] = {c:0, a:0};
-            timeStats[slot].c++; timeStats[slot].a += s.amount;
-            for(let name in s.items) { itemSales[name] = (itemSales[name] || 0) + s.items[name]; }
-        }
-        journalH += `<div class="report-card">
-            <div class="journal-top"><strong>#${s.no} ${s.time}</strong><span class="tag-pay">${s.type}</span></div>
-            ${!s.void ? `<button class="btn-void" onclick="voidOrder(${s.id})">退單</button>` : '<span style="color:red">已作廢</span>'}
-            <div style="margin:5px 0;">${Object.entries(s.items).map(([n, q]) => `${n}x${q}`).join(", ")}</div>
-            <div style="text-align:right; font-weight:bold; color:var(--red); font-size:18px;">$${s.amount}</div>
-        </div>`;
-    });
-
-    const sortedSlots = Object.keys(timeStats).sort();
-    let timeListH = sortedSlots.map(slot => `<div class="report-item-row"><span>${slot}</span><span>${timeStats[slot].c} 客 / $${timeStats[slot].a}</span></div>`).join('');
-
-    const sortedItems = Object.entries(itemSales).sort((a,b) => b[1] - a[1]);
-    let itemListH = sortedItems.map(([name, qty]) => `<div class="report-item-row"><span>${name}</span><span>${qty} 份</span></div>`).join('');
-
-    document.getElementById('reportContent').innerHTML = `
-        <div style="display:flex; justify-content:space-between; position:sticky; top:0; background:white; padding:10px; z-index:100; border-bottom:1px solid #eee;">
-            <button onclick="document.getElementById('adminModal').classList.remove('active')" style="background:var(--slate); color:white; border:none; padding:8px 15px; border-radius:8px;">⬅ 返回</button>
-            <strong>📊 營運報表</strong>
-        </div>
-        <div style="background:var(--green); color:white; padding:20px; border-radius:15px; text-align:center; margin-top:10px;">今日實收總額 <br><span style="font-size:32px; font-weight:bold;">$${total}</span></div>
-        <div class="report-title">💰 付款別明細</div>
-        <div class="report-card">${Object.entries(pay).map(([k,v])=>`<div class="report-item-row"><span>${k}</span><span>$${v}</span></div>`).join('')}</div>
-        <div class="report-title">🕒 時段分析</div>
-        <div class="report-card">${timeListH || '尚無數據'}</div>
-        <div class="report-title">🏆 熱銷排行榜</div>
-        <div class="report-card">${itemListH || '尚未開張'}</div>
-        <div class="report-title">📜 消費流水帳</div>
-        ${journalH || "<div style='text-align:center; padding:20px;'>尚無紀錄</div>"}
-    `;
-    document.getElementById('adminModal').classList.add('active');
-}
-
-function finishOrder(type, fromPreorder = null) {
-    let o;
-    const now = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', hour12:false});
-    if (fromPreorder) { o = fromPreorder; o.type = type; o.time = now; }
-    else {
-        const total = parseInt(document.getElementById('finalTotal').innerText);
-        if(total === 0) return;
-        o = { no: (++orderCount).toString().padStart(3, '0'), id: Date.now(), time: now, type, amount: total, items: {...cart}, chan: currentChan, discount: discountAmount, void: false };
-        kdsOrders.push(o); clearCurrentOrder();
+function getKdsStyle(order) {
+    if (order.isPreorder) {
+        const [hh, mm] = order.preTime.split(':');
+        const target = new Date(); target.setHours(parseInt(hh), parseInt(mm), 0);
+        const diff = (target - new Date()) / 60000;
+        if (diff <= 10) return "card-preorder urgent-10";
+        if (diff <= 15) return "card-preorder urgent-15";
+        return "card-preorder";
     }
-    salesData.push(o);
-    syncToGoogle(o);
-    if (currentChan === 'delivery') { currentChan = 'store'; updateChan(); }
-    renderKDS();
+    return order.chan === 'delivery' ? 'card-delivery' : 'card-store';
 }
 
 function renderKDS() {
     let h = "";
-    kdsOrders.sort((a,b) => (a.preorderTime || '99:99').localeCompare(b.preorderTime || '99:99')).forEach(o => {
-        let isPre = !!o.preorderTime;
-        h += `<div class="kds-card ${isPre?'card-preorder':(o.chan==='delivery'?'card-delivery':'card-store')} ${checkUrgency(o.preorderTime)}">
-            <div class="kds-tag"><span>#${o.no} ${isPre?'⏰'+o.preorderTime:''}</span><span>${o.type || '待結帳'}</span></div>
+    kdsOrders.forEach(o => {
+        h += `<div class="kds-card ${getKdsStyle(o)}">
+            <div class="kds-tag">
+                <span>#${o.no} ${o.isPreorder?'⏰預約':''}</span>
+                <span class="pay-tag">${o.type}</span>
+                <span>${o.isPreorder ? o.preTime : o.time}</span>
+            </div>
             <div class="kds-content">${Object.entries(o.items).map(([n, q]) => `${n} x ${q}`).join("<br>")}</div>
             <button class="btn-done-big" onclick="handleKDSDone(${o.id})">出餐完成</button>
         </div>`;
@@ -221,91 +209,241 @@ function renderKDS() {
 }
 
 function handleKDSDone(id) {
-    const o = kdsOrders.find(x => x.id === id);
-    if (o && o.preorderTime && !o.type) {
-        tempPreorderData = o;
-        let h = "";
-        ["現金", "LINE Pay", "全支付", "Uber", "熊貓"].forEach(t => h += `<button onclick="confirmPreorderPay('${t}')" style="background:var(--dark-orange); color:white; padding:15px; border-radius:10px; border:none;">${t}</button>`);
-        document.getElementById('preorderPayGrid').innerHTML = h;
-        document.getElementById('preorderPayModal').classList.add('active');
-    } else { kdsOrders = kdsOrders.filter(x => x.id !== id); renderKDS(); }
+    const order = kdsOrders.find(x => x.id === id);
+    if (order.isPreorder) {
+        pendingPreOrderId = id;
+        document.getElementById('prePaySelectModal').classList.add('active');
+    } else {
+        kdsOrders = kdsOrders.filter(x => x.id !== id);
+        persist(); renderKDS();
+    }
 }
 
-function confirmPreorderPay(t) {
-    if (t === "現金") { document.getElementById('preorderPayModal').classList.remove('active'); openCashModal(); }
-    else { const o = tempPreorderData; kdsOrders = kdsOrders.filter(x => x.id !== o.id); finishOrder(t, o); document.getElementById('preorderPayModal').classList.remove('active'); tempPreorderData = null; }
+function confirmPreOrderPay(payType) {
+    const order = kdsOrders.find(x => x.id === pendingPreOrderId);
+    if (!order) return;
+    if (payType === '現金') {
+        document.getElementById('prePaySelectModal').classList.remove('active');
+        cart = {...order.items};
+        discountAmount = 0;
+        currentChan = order.chan;
+        updateCartUI();
+        openCashModal();
+    } else {
+        order.type = payType;
+        salesData.push({...order});
+        kdsOrders = kdsOrders.filter(x => x.id !== pendingPreOrderId);
+        if(GAS_URL) fetch(GAS_URL, {method:"POST", mode:"no-cors", body:JSON.stringify(order)});
+        pendingPreOrderId = null;
+        document.getElementById('prePaySelectModal').classList.remove('active');
+        persist(); renderKDS();
+    }
 }
 
-function openCashModal() { if(parseInt(document.getElementById('finalTotal').innerText) === 0 && !tempPreorderData) return; cashTyped = ""; document.getElementById('cashDisplay').innerText = "0"; document.getElementById('cashModal').classList.add('active'); }
+function finishOrder(type) {
+    const total = parseInt(document.getElementById('finalTotal').innerText);
+    if(total === 0) return;
+    const now = new Date();
+    const o = {
+        no: (++orderCount).toString().padStart(3, '0'),
+        id: Date.now(),
+        date: `${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()}`,
+        time: now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', hour12:false}),
+        type, amount: total, items: {...cart}, chan: currentChan, void: false, isPreorder: false
+    };
+    salesData.push(o);
+    if (pendingPreOrderId) {
+        kdsOrders = kdsOrders.filter(x => x.id !== pendingPreOrderId);
+        pendingPreOrderId = null;
+    } else {
+        kdsOrders.push(o);
+    }
+    if(GAS_URL) fetch(GAS_URL, {method:"POST", mode:"no-cors", body:JSON.stringify(o)});
+    persist(); clearCurrentOrder(); renderKDS();
+    currentChan = 'store'; updateChan();
+}
+
+function preorderStart() {
+    const total = parseInt(document.getElementById('finalTotal').innerText);
+    if(total === 0) return;
+    const time = prompt("預約取餐時間", "12:00");
+    if(!time) return;
+    const now = new Date();
+    const o = {
+        no: "預"+(++orderCount),
+        id: Date.now(),
+        date: `${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()}`,
+        time: now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', hour12:false}),
+        preTime: time, type: "預約(未付)", amount: total, items: {...cart}, chan: currentChan, void: false, isPreorder: true
+    };
+    kdsOrders.push(o); persist(); clearCurrentOrder(); renderKDS();
+    currentChan = 'store'; updateChan();
+}
+
+function undoLastOrder() {
+    const last = salesData[salesData.length - 1]; 
+    if (!last || last.void || !confirm(`作廢單號 #${last.no} 並將品項退回購物車？`)) return;
+    last.void = true;
+    kdsOrders = kdsOrders.filter(x => x.id !== last.id);
+    cart = {...last.items};
+    currentChan = last.chan;
+    updateChan();
+    persist(); renderKDS(); updateCartUI();
+    alert(`單號 #${last.no} 已作廢，品項已回填。`);
+}
+
+function updateQty(n, d) {
+    const p = products.find(x => x.name === n);
+    if (p && p.hasFlavor && d > 0) {
+        document.getElementById('flavorModal').classList.add('active');
+        return;
+    }
+    cart[n] = (cart[n] || 0) + d;
+    if (cart[n] <= 0) delete cart[n];
+    updateCartUI();
+}
+
+function renderMenu() {
+    let h = "";
+    products.forEach(p => { if (currentChan === 'store' && p.isCombo) return;
+        const price = (currentChan === 'store' ? p.store : p.delivery);
+        let currentQty = cart[p.name] || 0;
+        if(p.hasFlavor) {
+            currentQty = Object.keys(cart).filter(k => k.startsWith(p.name)).reduce((sum, k) => sum + cart[k], 0);
+        }
+        h += `<div class="item-card"><span class="item-name">${p.name}</span><div class="item-price">$${price}</div><div class="qty-controls"><button class="btn-qty" onclick="updateQty('${p.name}', -1)">-</button><span style="font-size:24px; font-weight:bold;">${currentQty}</span><button class="btn-qty" onclick="updateQty('${p.name}', 1)">+</button></div></div>`;
+    });
+    document.getElementById('menuArea').innerHTML = h;
+}
+
+function updateCartUI() {
+    let s = 0, h = ""; 
+    for (let n in cart) { 
+        const baseName = n.includes('(') ? n.split('(')[0] : n;
+        const p = products.find(x => x.name === baseName); 
+        s += cart[n] * (currentChan === 'store' ? p.store : p.delivery); 
+        h += `<div>✅ ${n} x${cart[n]}</div>`; 
+    }
+    document.getElementById('finalTotal').innerText = Math.max(0, s - discountAmount);
+    document.getElementById('cartList').innerHTML = h || "🛒 尚未點餐...";
+    document.getElementById('discountInfo').style.display = discountAmount > 0 ? 'block' : 'none';
+    document.getElementById('discountInfo').innerText = "折扣: -$" + discountAmount;
+    renderMenu();
+}
+
+function updateReportView() {
+    const now = new Date();
+    const todayStr = `${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()}`;
+    const monthStr = `${now.getFullYear()}/${now.getMonth()+1}`;
+    
+    const getStats = (data) => {
+        let total = 0, pay = {}, items = {}, hours = {};
+        data.forEach(s => { 
+            if(s.void) return; 
+            total += s.amount; 
+            pay[s.type] = (pay[s.type] || 0) + s.amount;
+            const hr = s.time.split(':')[0]; 
+            hours[hr] = (hours[hr] || 0) + s.amount;
+            for(let n in s.items) items[n] = (items[n] || 0) + s.items[n]; 
+        });
+        return { total, pay, items, hours };
+    };
+
+    let contentH = `<div style="display:flex; justify-content:space-between; position:sticky; top:0; background:white; padding:10px 0; z-index:102; border-bottom:1px solid #eee;">
+        <button onclick="document.getElementById('adminModal').classList.remove('active')" style="background:var(--slate); color:white; border:none; padding:8px 15px; border-radius:8px;">⬅ 返回</button>
+        <strong>📊 報表中心</strong>
+    </div>
+    <div class="tab-container">
+        <button class="tab-btn ${currentReportTab==='daily'?'active':''}" onclick="switchTab('daily')">今日帳目</button>
+        <button class="tab-btn ${currentReportTab==='monthly'?'active':''}" onclick="switchTab('monthly')">月度分析</button>
+    </div>`;
+
+    const targetData = (currentReportTab === 'daily') ? salesData.filter(s => s.date === todayStr) : salesData.filter(s => s.date && s.date.includes(monthStr));
+    const s = getStats(targetData);
+
+    contentH += `<div class="report-title">${currentReportTab === 'daily' ? '今日實收' : now.getMonth()+1 + '月 累積'}</div>
+    <div class="report-card" style="border-left:5px solid ${currentReportTab==='daily'?'var(--green)':'var(--blue)'};">
+        <div class="report-item-row" style="font-size:20px;"><strong>總營收</strong><strong>$${s.total}</strong></div><hr>
+        ${Object.entries(s.pay).map(([k,v])=>`<div class="report-item-row"><span>${k}</span><span>$${v}</span></div>`).join('') || '無數據'}
+    </div>
+    <div class="report-title">🏆 銷售排行榜</div><div class="report-card">${Object.entries(s.items).sort((a,b)=>b[1]-a[1]).map(([n,q])=>`<div class="report-item-row"><span>${n}</span><span>${q} 份</span></div>`).join('') || '無'}</div>
+    <div class="report-title">🕒 時段分析</div><div class="report-card">${Object.entries(s.hours).sort((a,b)=>a[0]-b[0]).map(([hr, amt])=>`<div class="report-item-row"><span>${hr}:00 時段</span><span>$${amt}</span></div>`).join('') || '無數據'}</div>`;
+    
+    if(currentReportTab === 'daily') {
+        contentH += `<div class="report-title">📜 今日流水帳</div>${targetData.slice().reverse().map(o=>`<div class="report-card" style="${o.void?'opacity:0.5':''}">
+            <div style="display:flex; justify-content:space-between;"><strong>#${o.no} ${o.time}</strong><span>${o.type}</span></div>
+            <div style="color:var(--slate); margin:5px 0;">${Object.entries(o.items).map(([n,q])=>`${n}x${q}`).join(', ')}</div>
+            <div style="text-align:right; font-weight:bold;">${o.void?'[已作廢]':'$'+o.amount}</div></div>`).join('')}
+        <button id="btnClear" onclick="dailyClear()" style="width:100%; padding:20px; background:var(--red); color:white; border:none; border-radius:15px; font-weight:bold; font-size:18px; margin-top:10px;">🚨 結束營業 (同步雲端並日清)</button>`;
+    }
+    document.getElementById('reportContent').innerHTML = contentH;
+}
+
+async function dailyClear() {
+    const now = new Date();
+    const todayStr = `${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()}`;
+    const todaySales = salesData.filter(s => s.date === todayStr && !s.void);
+    
+    if(todaySales.length === 0) {
+        if(!confirm("今日尚無營業數據，確定要重置單號嗎？")) return;
+    } else {
+        if(!confirm("確定結束營業？系統將自動計算今日總帳並同步至 Google Sheets。")) return;
+        
+        let total = 0, itemsMap = {}, payMap = {};
+        todaySales.forEach(s => {
+            total += s.amount;
+            payMap[s.type] = (payMap[s.type] || 0) + s.amount;
+            for(let n in s.items) itemsMap[n] = (itemsMap[n] || 0) + s.items[n];
+        });
+        
+        const summaryData = {
+            type: "DAILY_SUMMARY",
+            date: todayStr,
+            totalAmount: total,
+            itemStats: Object.entries(itemsMap).map(([n,q]) => `${n}:${q}`).join(", "),
+            paymentStats: Object.entries(payMap).map(([k,v]) => `${k}:${v}`).join(", "),
+            orderCount: todaySales.length
+        };
+
+        try {
+            document.getElementById('btnClear').innerText = "⏳ 同步中...";
+            await fetch(GAS_URL, {method:"POST", mode:"no-cors", body:JSON.stringify(summaryData)});
+            alert("雲端同步成功！");
+        } catch(e) {
+            alert("雲端同步失敗，請檢查網路。");
+        }
+    }
+
+    kdsOrders = []; 
+    orderCount = 0; 
+    persist(); 
+    location.reload(); 
+}
+
+function openCashModal() { if(parseInt(document.getElementById('finalTotal').innerText) === 0) return; cashTyped = ""; document.getElementById('cashDisplay').innerText = "0"; document.getElementById('cashModal').classList.add('active'); }
 function quickCash(v) { let cur = parseInt(document.getElementById('cashDisplay').innerText) || 0; cashTyped = (cur + v).toString(); document.getElementById('cashDisplay').innerText = cashTyped; }
 function pressNum(n) { cashTyped += n; document.getElementById('cashDisplay').innerText = parseInt(cashTyped) || 0; }
 function clearNum() { cashTyped = ""; document.getElementById('cashDisplay').innerText = "0"; }
 function closeCash() { document.getElementById('cashModal').classList.remove('active'); }
 function submitCash() {
-    const target = tempPreorderData ? tempPreorderData.amount : parseInt(document.getElementById('finalTotal').innerText);
+    const target = parseInt(document.getElementById('finalTotal').innerText);
     const input = parseInt(document.getElementById('cashDisplay').innerText);
     if (input < target) return alert("金額不足");
     document.getElementById('changeVal').innerText = input - target;
     document.getElementById('cashModal').classList.remove('active');
     document.getElementById('changeModal').classList.add('active');
-    if (tempPreorderData) { const o = tempPreorderData; kdsOrders = kdsOrders.filter(x => x.id !== o.id); finishOrder("現金", o); tempPreorderData = null; } 
-    else { finishOrder("現金"); }
-}
-
-function updateQty(n, d) { cart[n] = (cart[n] || 0) + d; if (cart[n] <= 0) delete cart[n]; renderMenu(); updateCartUI(); }
-function renderMenu() {
-    let h = "";
-    products.forEach(p => {
-        if (currentChan === 'store' && p.isCombo) return;
-        const price = (currentChan === 'store' ? p.store : p.delivery);
-        h += `<div class="item-card"><span class="item-name">${p.name}</span><div class="item-price">$${price}</div><div class="qty-controls"><button class="btn-qty" onclick="updateQty('${p.name}', -1)">-</button><span style="font-size:24px; font-weight:bold;">${cart[p.name] || 0}</span><button class="btn-qty" onclick="updateQty('${p.name}', 1)">+</button></div></div>`;
-    });
-    document.getElementById('menuArea').innerHTML = h;
-}
-function updateCartUI() {
-    let s = 0, h = "";
-    for (let n in cart) {
-        const p = products.find(x => x.name === n);
-        s += cart[n] * (currentChan === 'store' ? p.store : p.delivery);
-        h += `<div>✅ ${n} x${cart[n]}</div>`;
-    }
-    const final = Math.max(0, s - discountAmount);
-    document.getElementById('finalTotal').innerText = final;
-    document.getElementById('cartList').innerHTML = h || "🛒 尚未點餐...";
-    document.getElementById('discountInfo').style.display = discountAmount > 0 ? 'block' : 'none';
+    finishOrder("現金");
 }
 function openDiscountModal() { discTyped = ""; document.getElementById('discountDisplay').innerText = "0"; document.getElementById('discountModal').classList.add('active'); }
-function closeDiscount() { document.getElementById('discountModal').classList.remove('active'); }
 function pressDisc(n) { discTyped += n; document.getElementById('discountDisplay').innerText = parseInt(discTyped) || 0; }
+function submitDiscount() { discountAmount = parseInt(discTyped) || 0; updateCartUI(); document.getElementById('discountModal').classList.remove('active'); }
 function clearDisc() { discTyped = ""; document.getElementById('discountDisplay').innerText = "0"; }
-function submitDiscount() { discountAmount = parseInt(discTyped) || 0; updateCartUI(); closeDiscount(); }
-function preorderStart() {
-    const total = parseInt(document.getElementById('finalTotal').innerText);
-    if(total === 0) return;
-    const time = prompt("預約時間 (例 15:30)", ""); if (!time) return;
-    const o = { no: "預" + (++orderCount).toString().slice(-2), id: Date.now(), preorderTime: time, amount: total, items: {...cart}, chan: currentChan, discount: discountAmount, void: false };
-    kdsOrders.push(o); renderKDS(); clearCurrentOrder();
-}
-function undoLastOrder() {
-    const last = [...salesData].reverse().find(o => !o.void);
-    if (!last || !confirm(`作廢單號 #${last.no}？`)) return;
-    last.void = true; kdsOrders = kdsOrders.filter(x => x.id !== last.id);
-    currentChan = last.chan; cart = {...last.items}; discountAmount = last.discount;
-    updateChan(); updateCartUI(); renderKDS();
-}
-function voidOrder(id) { 
-    if(confirm("確定作廢？")){ 
-        const o = salesData.find(x => x.id === id); 
-        if(o){ 
-            o.void=true; 
-            syncToGoogle({...o, no: o.no + "(退單)"});
-            showReport(); 
-        } 
-    } 
-}
-function verifyAdmin() { if (prompt("密碼") === ADMIN_PIN) showReport(); }
+function closeDiscount() { document.getElementById('discountModal').classList.remove('active'); }
+function verifyAdmin() { if (prompt("密碼") === ADMIN_PIN) { updateReportView(); document.getElementById('adminModal').classList.add('active'); } }
 function clearCurrentOrder() { cart = {}; discountAmount = 0; renderMenu(); updateCartUI(); }
 function handlePrePayment(type) { finishOrder(type); }
+function switchTab(t) { currentReportTab = t; updateReportView(); }
+
 document.getElementById('btnStore').onclick = () => { currentChan = 'store'; updateChan(); };
 document.getElementById('btnDelivery').onclick = () => { currentChan = 'delivery'; updateChan(); };
 function updateChan() { 
@@ -314,8 +452,8 @@ function updateChan() {
     document.getElementById('mainBody').className = (currentChan==='store'?'mode-store':'mode-delivery');
     renderMenu();
 }
-setInterval(renderKDS, 10000);
-renderMenu();
+setInterval(renderKDS, 30000); 
+renderMenu(); renderKDS();
 </script>
 </body>
 </html>
